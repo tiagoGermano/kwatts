@@ -1,9 +1,9 @@
 import moment from "moment";
-const { DATO_CMS_TOKEN } = process.env;
+const { REACT_APP_DATO_CMS_TOKEN } = process.env;
 
 const { SiteClient} = require('datocms-client');
 
-const TOKEN = DATO_CMS_TOKEN;
+const TOKEN = REACT_APP_DATO_CMS_TOKEN;
 const client = new SiteClient(TOKEN);
 const medicaoItemType = '1244651';
 
