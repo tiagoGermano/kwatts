@@ -35,7 +35,7 @@ const RegistroLeitura: React.FC = () => {
 
     const registrarLeitura = async () => {
         if(dataUltimoRegistro){
-            if(differenceInDays(new Date(dataUltimoRegistro), new Date()) > 0){
+            if(differenceInDays(new Date(), new Date(dataUltimoRegistro)) > 0){
                 const novaLeitura = await leituraService.registar(leitura);
                 setUltimaLeitura(novaLeitura.valorMedicao);
                 setDataUltimoRegistro(novaLeitura.dataMedicao);
