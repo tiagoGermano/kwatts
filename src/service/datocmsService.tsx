@@ -1,4 +1,3 @@
-import moment from "moment";
 const { REACT_APP_DATO_CMS_TOKEN } = process.env;
 
 const { SiteClient} = require('datocms-client');
@@ -25,7 +24,7 @@ async function registrarLeitura(leitura: number) {
 }
 
 function listarLeituras(callback: Function) {
-    const leituras = client.items.all().then(callback)
+    client.items.all().then(callback)
 }
 
 export const leituraService = {

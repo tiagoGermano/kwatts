@@ -1,68 +1,53 @@
 import './registroLeitura.css';
 import React, { useEffect, useState } from 'react';
-import { BarChartOutlined, SaveOutlined, PlusCircleOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { HomeOutlined, SaveOutlined, PlusCircleOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { leituraService } from '../../service/datocmsService';
 import compareDesc from 'date-fns/compareDesc'
-import { Button, Modal } from 'antd';
-import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import differenceInDays from 'date-fns/differenceInDays'
+import { Button, Modal, Spin } from 'antd';
 import { format } from 'date-fns';
-
-Chart.register(...registerables);
+import { useHistory } from 'react-router';
 
 const RegistroLeitura: React.FC = () => {
+    const history = useHistory();
     const [leitura, setLeitura] = useState(0);
     const [relogio, setRelogio] = useState('000000000');
-    const [chartLabel, setChartLabel] = useState<string[]>([]);
-    const [chartData, setChartData] = useState<number[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [ultimaLeitura, setUltimaLeitura] = useState(0);
+    const [dataUltimoRegistro, setDataUltimoRegistro] = useState(null);
 
     
     const click = () => {
-        // history.push({
-            //     pathname: '/',
-            // });
-
-            const data = {
-                labels: chartLabel,
-                datasets: [{
-                    label: 'Consumo ultimos 7 dias',
-                    backgroundColor: '#1890ff',
-                    borderColor: '#1890ff',
-                    data: chartData,
-                }]
-            };
-
-        const config: ChartConfiguration = {
-            type: 'line',
-            data: data,
-            options: {}
-        };
-        
-        var myChart = new Chart(
-            document.getElementById('myChart'),
-            config
-        );
-
-
+        history.push({
+                pathname: '/',
+            });
     };
-
-    // const atualiarRelogio = () => {
-    //     const leituraFormatada = leitura.padStart(9, '0');
-    //     setLeitura(leituraFormatada)
-    // }
 
     const incrementarRelogio = () => {
         setLeitura(leitura + 1);
     }
 
     const decrementarRelogio = () => {
-        setLeitura(leitura - 1);
+        if(leitura > ultimaLeitura){
+            setLeitura(leitura - 1);
+        }
     }
 
     const registrarLeitura = async () => {
-        const novaLeitura = await leituraService.registar(leitura);
-        Modal.success({
-            content: 'Leitura registrado com sucesso !',
-        })
+        if(dataUltimoRegistro){
+            if(differenceInDays(new Date(dataUltimoRegistro), new Date()) > 0){
+                const novaLeitura = await leituraService.registar(leitura);
+                setUltimaLeitura(novaLeitura.valorMedicao);
+                setDataUltimoRegistro(novaLeitura.dataMedicao);
+                Modal.success({
+                    content: 'Leitura registrado com sucesso!',
+                });
+            } else {
+                Modal.warn({
+                    content: 'Só permitido uma leitura por dia.',
+                })
+            }
+        }
     }
     
     useEffect(() => {
@@ -80,7 +65,8 @@ const RegistroLeitura: React.FC = () => {
 
     const carregarUltimaLeitura = (leituras : [any]) =>{
         const ultimasLeituras = leituras.sort(comparaDatas).slice(0,8).reverse();
-        const ultimaLeitura = ultimasLeituras[ultimasLeituras.length -1].valorMedicao;
+        const ultimoRegistro = ultimasLeituras[ultimasLeituras.length -1].valorMedicao;
+        const ultimaData = ultimasLeituras[ultimasLeituras.length -1].dataMedicao;
 
         const labels : string[]= [];
         const medicoes : number[]= [];
@@ -90,37 +76,38 @@ const RegistroLeitura: React.FC = () => {
             medicoes.push(ultimasLeituras[index +1].valorMedicao - ultimasLeituras[index].valorMedicao)
         }
 
-        setLeitura(ultimaLeitura);
-        setChartLabel(labels);
-        setChartData(medicoes);
+        setLeitura(ultimoRegistro);
+        setUltimaLeitura(ultimoRegistro);
+        setDataUltimoRegistro(ultimaData);
+        setLoading(false);
     }
 
     return (
         <>
-            {/* <Input type="number" value={relogio} min={0} maxLength={9}></Input> */}
-            {/* <Button onClick={atualiarRelogio}>clickme</Button> */}
             <h3>Registrar Leitura</h3>
-            <div className="relogio">
-                <MinusCircleOutlined className="btnAcaoRelogio" onClick={decrementarRelogio}/>
-                    {
-                        relogio.split('').map( (digito) => {
-                            return <span className="digito">{digito}</span>
-                        })
-                    }
-                <PlusCircleOutlined className="btnAcaoRelogio" onClick={incrementarRelogio}/>
-            </div>
-            <br/>
-            <Button
-                type="primary"
-                icon={<SaveOutlined />}
-                onClick={registrarLeitura}>
-                Registrar
-            </Button>
-            <Button 
-                onClick={() => {click()}}
-                icon={<BarChartOutlined />}>
-                Grafico
-            </Button>
+            <Spin spinning={loading}>
+                <div className="relogio">
+                    <MinusCircleOutlined className="btnAcaoRelogio" onClick={decrementarRelogio}/>
+                        {
+                            relogio.split('').map( (digito, index) => {
+                                return <span key={index} className="digito">{digito}</span>
+                            })
+                        }
+                    <PlusCircleOutlined className="btnAcaoRelogio" onClick={incrementarRelogio}/>
+                </div>
+                <br/>
+                <Button
+                    type="primary"
+                    icon={<SaveOutlined />}
+                    onClick={registrarLeitura}>
+                    Registrar
+                </Button>
+                <Button 
+                    onClick={() => {click()}}
+                    icon={<HomeOutlined />}>
+                    Home
+                </Button>
+            </Spin>
             <br/>
             <br/>
             <div className="chartContent">

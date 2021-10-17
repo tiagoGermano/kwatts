@@ -13,6 +13,12 @@ export default function Home() {
     });
   };
 
+  const handlerGraficoClick = () => {
+    history.push({
+      pathname: '/graficos',
+    });
+  }
+
   return (
     <>
       <Button 
@@ -22,6 +28,7 @@ export default function Home() {
           Registrar Leitura
       </Button>
       <Button 
+        onClick={handlerGraficoClick}
         icon={<BarChartOutlined />} >
           Gráficos
       </Button>
